@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@ethersproject/providers": "^5.6.8",
-    "@ethersproject/strings": "5.6.1",
-    "@ethersproject/transactions": "5.6.2",
+    "@ethersproject/strings": "5.7.0",
+    "@ethersproject/transactions": "5.7.0",
     "@veramo/core": "^4.0.0",
     "@veramo/key-manager": "^4.0.0",
     "debug": "^4.3.3"
