@@ -27,6 +27,7 @@ export default (testContext: {
     let didEthrIdentifier: IIdentifier
     let didKeyIdentifier: IIdentifier
     let pkhIdentifier: IIdentifier
+    let pkhHederaIdentifier: IIdentifier
     let storedCredentialHash: string
     let storedPkhCredentialHash: string
     let challenge: string
@@ -37,7 +38,7 @@ export default (testContext: {
       challenge = 'TEST_CHALLENGE_STRING'
       didEthrIdentifier = await agent.didManagerCreate({ kms: 'local', provider: 'did:ethr' })
       didKeyIdentifier = await agent.didManagerCreate({ kms: 'local', provider: 'did:key' })
-      pkhIdentifier = await agent.didManagerCreate({ kms: 'local', provider: "did:pkh", options: { chainId: "1"} })
+      pkhIdentifier = await agent.didManagerCreate({ kms: 'local', provider: "did:pkh", options: { network: 'eip155', chainId: "1"} })
     })
     afterAll(testContext.tearDown)
 
@@ -260,7 +261,7 @@ export default (testContext: {
       expect(result.verified).toEqual(true)
     })
 
-    it('should create verifiable credential in LD with did:pkh', async () => {
+    it('should create verifiable credential in LD with did:pkh:eip155', async () => {
       const verifiableCredential = await agent.createVerifiableCredential({
         credential: {
           issuer: { id: pkhIdentifier.did },
@@ -285,6 +286,46 @@ export default (testContext: {
 
       const verifiableCredential2 = await agent.dataStoreGetVerifiableCredential({
         hash: storedPkhCredentialHash,
+      })
+      expect(verifiableCredential).toEqual(verifiableCredential2)
+    })
+
+
+    it('should create verifiable credential in LD with did:pkh:hedera', async () => {
+      
+      let pk1 = "2386d1d21644dc65d4e4b9e2242c5f155cab174916cbc46ad85622cdaeac835c";
+      let pk2 = "db901b991d6e571caaac9012877543c877f858379b177a685adaace47f733159";
+
+      let pkhHederaIdentifier1 = await agent.didManagerCreate({ kms: 'local', provider: "did:pkh", 
+        options: { network: 'hedera', chainId: "mainnet", hederaAccountId: "0.0.48865029", privateKey: pk1 } })
+      
+      let pkhHederaIdentifier2 = await agent.didManagerCreate({ kms: 'local', provider: "did:pkh", 
+         options: { network: 'hedera', chainId: "mainnet", hederaAccountId: "0.0.1503629", privateKey: pk2 } })
+      
+      const verifiableCredential = await agent.createVerifiableCredential({
+        credential: {
+          issuer: { id: pkhHederaIdentifier2.did },
+          '@context': ['https://www.w3.org/2018/credentials/v1', 'https://veramo.io/contexts/profile/v1'],
+          type: ['VerifiableCredential', 'Profile'],
+          issuanceDate: new Date().toISOString(),
+          credentialSubject: {
+            id: pkhHederaIdentifier2.did,
+            name: 'Martin, the great',
+          },
+        },
+        proofFormat: 'lds',
+      })
+
+      // Check credential:
+      expect(verifiableCredential).toHaveProperty('proof')
+      expect(verifiableCredential).toHaveProperty('proof.jws')
+      expect(verifiableCredential['type']).toEqual(['VerifiableCredential', 'Profile'])
+
+      let storedCredentialHash = await agent.dataStoreSaveVerifiableCredential({ verifiableCredential })
+      expect(typeof storedCredentialHash).toEqual('string')
+
+      const verifiableCredential2 = await agent.dataStoreGetVerifiableCredential({
+        hash: storedCredentialHash,
       })
       expect(verifiableCredential).toEqual(verifiableCredential2)
     })
