@@ -2,6 +2,7 @@ import { convertPublicKeyToX25519, convertSecretKeyToX25519 } from '@stablelib/e
 import { computePublicKey } from '@ethersproject/signing-key'
 import { computeAddress } from '@ethersproject/transactions'
 import { DIDDocumentSection, IAgentContext, IIdentifier, IKey, IResolver } from '@veramo/core'
+import { AccountId } from '@hashgraph/sdk'
 import { DIDDocument, VerificationMethod } from 'did-resolver'
 import {
   _ExtendedIKey,
@@ -91,7 +92,14 @@ function compareBlockchainAccountId(localKey: IKey, verificationMethod: Verifica
   ) {
     return false
   }
+
+  if (verificationMethod.blockchainAccountId?.startsWith('hedera')) {
+    return true
+  }
+  
   let vmEthAddr = getEthereumAddress(verificationMethod)
+
+  
   if (localKey.meta?.account) {
     return vmEthAddr === localKey.meta?.account.toLowerCase()
   }

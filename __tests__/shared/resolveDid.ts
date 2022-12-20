@@ -35,12 +35,27 @@ export default (testContext: {
       expect(result).toHaveProperty('didResolutionMetadata')
     })
 
-    it('should resolve did:pkh', async () => {
+    it('should resolve did:pkh:eip155', async () => {
       let identifier: IIdentifier = await agent.didManagerCreate({
         // this expects the `did:ethr` provider to matchPrefix and use the `arbitrum:goerli` network specifier
         provider: 'did:pkh',
-        options: { chainId: "1"}
+        options: { network: 'eip155', chainId: "1"}
       });
+
+      const result = await agent.resolveDid({ didUrl: identifier.did});
+      const didDoc = result.didDocument
+      expect(didDoc?.id).toEqual(identifier.did)
+      expect(result).toHaveProperty('didDocumentMetadata')
+      expect(result).toHaveProperty('didResolutionMetadata')
+
+      //let cred = await agent.createVerifiableCredential()
+    });
+
+    it('should resolve did:pkh:hedera', async () => {
+      let pk = "2386d1d21644dc65d4e4b9e2242c5f155cab174916cbc46ad85622cdaeac835c";
+     
+      let identifier = await agent.didManagerCreate({ kms: 'local', provider: "did:pkh", 
+        options: { network: 'hedera', chainId: "mainnet", hederaAccountId: "0.0.48865029", privateKey: pk } })
 
       const result = await agent.resolveDid({ didUrl: identifier.did});
       const didDoc = result.didDocument
